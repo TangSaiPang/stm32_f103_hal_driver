@@ -1,7 +1,6 @@
 #include "lcd.h"
 #include "lcd_init.h"
 #include "lcdfont.h"
-#include "image.h"
 
 /******************************************************************************
       函数说明：在指定区域填充颜色
@@ -554,18 +553,4 @@ void LCD_ShowPicture(uint16_t x,uint16_t y,uint16_t length,uint16_t width,const 
 	}			
 }
 
-void LCD_ShowGirl(void)
-{
-	uint16_t i,j;
-	uint32_t k=0;
-	LCD_Address_Set(0, 0, 240, 320);
-	for(i=0;i<240;i++)
-	{
-		for(j=0;j<320;j++)
-		{
-			LCD_WR_DATA8(girl[k*2]);
-			LCD_WR_DATA8(girl[k*2+1]);
-			k++;
-		}
-	}
-}
+
