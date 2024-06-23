@@ -1,4 +1,4 @@
-#include "GT911.h"
+#include "bsp_gt911.h"
 #include "lcd_init.h"
 #include "lcd.h"
 #include "bsp_led.h"
