@@ -39,9 +39,11 @@ extern _m_tp_dev tp_dev;	 	//触屏控制器在touch.c里面定义
 #define CTP_RES_Set() HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET)
 
 void CTP_GPIOInit(void);
-uint8_t GT_WR_DATA(uint16_t addr,uint8_t data);
-uint8_t GT_RD_DATA(uint16_t addr,uint8_t len,uint8_t *value);
+
 void  GT_Init(void);
+
+void GT911_Write_Data(uint16_t addr,uint8_t data);
+void GT911_Read_Data(uint16_t addr,uint8_t len,uint8_t *value);
 
 uint8_t GT911_Scan(uint8_t mode);
 
@@ -51,8 +53,7 @@ void lcd_draw_bline(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2,uint16_t 
 
 void GT911_test(void);
 
-void GT911_Write_Data(uint16_t addr,uint8_t data);
-void GT911_Read_Data(uint16_t addr,uint8_t len,uint8_t *value);
+
 
 #endif
 
