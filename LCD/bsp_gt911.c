@@ -8,13 +8,41 @@ uint8_t touchIC_ID[4];
 const uint16_t TPX[] = {0x8150,0x8158,0x8160,0x8168,0x8170}; //电容屏触摸点数据地址（1~5）
 const uint16_t POINT_COLOR_TBL[TOUCH_MAX]={RED,GREEN,BLUE,BROWN,GRED};
 
-_m_tp_dev tp_dev=
+_m_tp_dev tp_dev =
 {
 	0,
-	0, 
 	0,
 	0,
-};	
+	0,
+};
+
+
+void CTP_GPIOInit(void)
+{
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+	/* GPIO Ports Clock Enable */
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+
+	/*Configure GPIO pin Output Level */
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+
+	/*Configure GPIO pins : PBPin */
+	GPIO_InitStruct.Pin = GPIO_PIN_8;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+	/*Configure GPIO pins : PAPin */
+	GPIO_InitStruct.Pin = GPIO_PIN_0;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
 
 void  GT_Init(void)
 {
@@ -38,55 +66,32 @@ void  GT_Init(void)
 	HAL_Delay(20);
 	CTP_RES_Set();
 	HAL_Delay(20);
-	GT_RD_DATA(GT_ID_ADDR,4,touchIC_ID);
-  LCD_ShowString(0,86,"GT911-ID:",RED,WHITE,24,0);	
-  LCD_ShowString(108,86,touchIC_ID,RED,WHITE,24,0);
+	GT911_Read_Data(GT_ID_ADDR,4,touchIC_ID);
+	LCD_ShowString(0,86,(const uint8_t*)"GT911-ID:",RED,WHITE,24,0);
+	LCD_ShowString(108,86,touchIC_ID,RED,WHITE,24,0);
 }
-uint8_t GT_WR_DATA(uint16_t addr,uint8_t data)
+
+/*
+ * @brief: GT911 read data
+ * @param: addr Register Address
+ * @param: data Pointer to data buffer
+ * @retval None
+ * */
+void GT911_Write_Data(uint16_t addr,uint8_t data)
 {
-	uint8_t reg;
-	CTP_IIC_Start();          //IIC起始信号
-	CTP_SendByte(GT_WR_CMD);  //发送写指令
-	CTP_WaitAck();    
-	CTP_SendByte((uint8_t)(addr>>8));
-	CTP_WaitAck();
- 	CTP_SendByte((uint8_t)addr);
-	CTP_WaitAck();
-	CTP_SendByte(data);       //写入数据
-	CTP_WaitAck();
-	CTP_IIC_Stop();           //IIC结束信号
-	reg=SUCCESS;
-	return reg;
+	HAL_I2C_Mem_Write(&hi2c1, GT_WR_CMD, addr, I2C_MEMADD_SIZE_16BIT,  &data, 2, 0xff);
 }
-uint8_t GT_RD_DATA(uint16_t addr,uint8_t len,uint8_t *value)
+
+/*
+ * @brief: GT911 read data
+ * @param: addr Register Address
+ * @param: len Data size
+ * @param: value Pointer to data buffer
+ * @retval None
+ * */
+void GT911_Read_Data(uint16_t addr,uint8_t len,uint8_t *value)
 {
-  uint8_t reg=ERROR,i;
-	CTP_IIC_Start();
-	CTP_SendByte(GT_WR_CMD);  //发送写指令
-	CTP_WaitAck();    
-	CTP_SendByte((uint8_t)(addr>>8));
-	CTP_WaitAck();
- 	CTP_SendByte((uint8_t)addr);
-	CTP_WaitAck();
-	
-	CTP_IIC_Start();
-	IIC_delay(20);
-	CTP_SendByte(GT_RD_CMD);
-	CTP_WaitAck();
-	for(i=0;i<len;i++)
-	{
-		if(i==(len-1))
-		{
-			value[i]=CTP_ReadByte(0x00);
-		}
-		else
-		{
-			value[i]=CTP_ReadByte(0x01);
-		}
-	}
-	CTP_IIC_Stop();
-	reg=SUCCESS;
-	return reg;	
+	HAL_I2C_Mem_Read(&hi2c1, GT_RD_CMD, addr, I2C_MEMADD_SIZE_16BIT, value, len, 0xff);
 }
 
 uint8_t GT911_Scan(uint8_t mode)
@@ -100,11 +105,11 @@ uint8_t GT911_Scan(uint8_t mode)
 	t++;
 	if((t%10)==0||t<10)//空闲时,每进入10次CTP_Scan函数才检测1次,从而节省CPU使用率
 	{ 
- 		GT_RD_DATA(GT_Point_ADDR, 1, &mode);
+ 		GT911_Read_Data(GT_Point_ADDR, 1, &mode);
 		if(mode&0X80&&((mode&0XF)<6))
 		{
 			temp=0;	
-			GT_WR_DATA(GT_Point_ADDR,temp);
+			GT911_Write_Data(GT_Point_ADDR,temp);
 		}		
 		if((mode&0XF)&&((mode&0XF)<6))
 		{
@@ -117,7 +122,7 @@ uint8_t GT911_Scan(uint8_t mode)
 			{
 				if(tp_dev.sta&(1<<i))	//触摸有效?
 				{
-					GT_RD_DATA(TPX[i],4,buf);	//读取XY坐标值
+					GT911_Read_Data(TPX[i],4,buf);	//读取XY坐标值
 					if(USE_HORIZONTAL==2)//横屏
 					{
 						tp_dev.y[i]=240-((uint16_t)buf[1]<<8)-buf[0];
@@ -267,32 +272,34 @@ void GT911_test(void)
 	}	
 }
 
-//按屏幕上的按键控制LED亮灭
-void Button_Scan(void)
-{
-	uint8_t t=0;
+////按屏幕上的按键控制LED亮灭
+//void Button_Scan(void)
+//{
+//	uint8_t t=0;
+//
+//	while(1)
+//	{
+//		GT911_Scan(0);
+//
+//		if((tp_dev.sta)&(1<<t))//判断是否有点触摸？
+//		{
+//			HAL_Delay(1);
+//			if(tp_dev.x[t]>100 && tp_dev.y[t]>100 && tp_dev.x[t]<140 && tp_dev.y[t]<140)//在按钮范围内
+//			{
+//				LED0_ON();
+//				LED1_ON();
+//			}
+//			else if(tp_dev.x[t]>100 && tp_dev.y[t]>180 && tp_dev.x[t]<140 && tp_dev.y[t]<220)//在按钮范围内
+//			{
+//				LED0_OFF();
+//				LED1_OFF();
+//			}
+//			else
+//			{}
+//		}
+//		HAL_Delay(10);
+//	}
+//}
 
-	while(1)
-	{
-		GT911_Scan(0);
 
-		if((tp_dev.sta)&(1<<t))//判断是否有点触摸？
-		{
-			HAL_Delay(1);
-			if(tp_dev.x[t]>100 && tp_dev.y[t]>100 && tp_dev.x[t]<140 && tp_dev.y[t]<140)//在按钮范围内
-			{
-				LED0_ON();
-				LED1_ON();
-			}
-			else if(tp_dev.x[t]>100 && tp_dev.y[t]>180 && tp_dev.x[t]<140 && tp_dev.y[t]<220)//在按钮范围内
-			{
-				LED0_OFF();
-				LED1_OFF();
-			}
-			else
-			{}
-		}
-		HAL_Delay(10);
-	}
-}
 
