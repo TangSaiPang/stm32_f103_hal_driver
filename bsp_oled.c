@@ -75,11 +75,11 @@ void OLED_WR_Byte(uint8_t dat,uint8_t mode)
 {
 	if(mode)
 	{
-		HAL_I2C_Mem_Write(&hi2c1, 0x78, 0x40, I2C_MEMADD_SIZE_8BIT, &dat, 1, 0x100);//0x40 
+		HAL_I2C_Mem_Write(&hi2c1, 0x78, 0x40, I2C_MEMADD_SIZE_8BIT, &dat, 1, 0x100);//0x40 写数据
 	}
 	else
 	{
-		HAL_I2C_Mem_Write(&hi2c1, 0x78, 0x00, I2C_MEMADD_SIZE_8BIT, &dat, 1, 0x100);//0x00
+		HAL_I2C_Mem_Write(&hi2c1, 0x78, 0x00, I2C_MEMADD_SIZE_8BIT, &dat, 1, 0x100);//0x00 写命令
 	}
 }
 
