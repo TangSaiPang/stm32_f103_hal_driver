@@ -21,5 +21,7 @@ extern UART_HandleTypeDef huart1;
 
 void DEBUG_USART_Config(void);
 
+void USART1_Transmit(char *p_data);
+
 
 #endif /* USART_BSP_USART_H_ */
