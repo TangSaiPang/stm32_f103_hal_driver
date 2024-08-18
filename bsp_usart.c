@@ -61,14 +61,14 @@ GETCHAR_PROTOTYPE
 	return ch;
 }
 
-void USART1_Transmit(char *p_data)
+void USART1_Transmit(char *pData)
 {
-	while(*p_data)
+	while(*pData)
 	{
 //		while ((USART1 -> SR & 0x40) == 0);
 		while (!(USART1 -> SR & (1 << 6)));
-		USART1 -> DR = *p_data;
-		p_data++;
+		USART1 -> DR = *pData;
+		pData++;
 	}
 }
 
