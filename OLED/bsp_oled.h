@@ -6,8 +6,8 @@
 #include "i2c.h"
 #include "stdio.h"
 
-#define OLED_CMD  0	//Ğ´ÃüÁî
-#define OLED_DATA 1	//Ğ´Êı¾İ
+#define OLED_CMD  0	//ÃÂ´ÃƒÃ¼ÃÃ®
+#define OLED_DATA 1	//ÃÂ´ÃŠÃ½Â¾Ã
 
 void OLED_ClearPoint(uint8_t x,uint8_t y);
 void OLED_ColorTurn(uint8_t i);
